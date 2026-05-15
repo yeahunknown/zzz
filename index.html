@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ALS - Autonomous Live Shield</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #eef5ff;
+        }
+
+        /* main portal panel — appears in about:blank window after cloaking */
+        .als-container {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(15, 25, 45, 0.65);
+            backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(72, 187, 255, 0.3);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 255, 0.1) inset;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: rgba(0, 10, 25, 0.7);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid #2c3e66;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 1.9rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a0e9ff, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 12px rgba(59,130,246,0.3);
+        }
+
+        .badge {
+            background: #1e2a3a;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            border-left: 3px solid #3b82f6;
+            color: #b9e6ff;
+        }
+
+        .shield-status {
+            background: #0f212e;
+            border-radius: 2rem;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #10b981;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.9);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+
+        /* main grid : AI + security console */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 0.9fr;
+            gap: 0;
+            min-height: 580px;
+        }
+
+        .ai-chat-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid #2a3a55;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .chat-window {
+            flex: 1;
+            background: #07111e;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #2a3f5e;
+            margin-bottom: 1rem;
+            max-height: 380px;
+            min-height: 320px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .user-msg {
+            align-self: flex-end;
+            background: #1e3a5f;
+            padding: 8px 14px;
+            border-radius: 20px 20px 4px 20px;
+            max-width: 80%;
+            color: white;
+        }
+
+        .ai-msg {
+            align-self: flex-start;
+            background: #0f1a2c;
+            padding: 8px 14px;
+            border-radius: 20px 20px 20px 4px;
+            border-left: 2px solid #3b82f6;
+            max-width: 85%;
+            color: #e2edff;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .input-area input {
+            flex: 1;
+            background: #0c1624;
+            border: 1px solid #2c405e;
+            padding: 12px 16px;
+            border-radius: 2rem;
+            color: white;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .input-area button {
+            background: #2563eb;
+            border: none;
+            padding: 0 20px;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .input-area button:hover {
+            background: #3b82f6;
+            box-shadow: 0 0 8px #3b82f6;
+        }
+
+        .security-console {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .console-header {
+            font-family: monospace;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ef4444;
+            padding-left: 12px;
+        }
+
+        .log-area {
+            background: #01060ecc;
+            border-radius: 1rem;
+            padding: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #2e3e5a;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid #1e2a3a;
+            padding: 6px 0;
+            color: #9bbde2;
+        }
+
+        .log-entry.warning {
+            color: #f97316;
+        }
+
+        .log-entry.block {
+            color: #f87171;
+            text-decoration: line-through;
+            background: #3b1e1e30;
+        }
+
+        footer {
+            background: #020a12;
+            padding: 12px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5a789b;
+            border-top: 1px solid #1a2c44;
+        }
+
+        @media (max-width: 780px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .ai-chat-section {
+                border-right: none;
+                border-bottom: 1px solid #2a3a55;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- This content will be mirrored inside about:blank after cloaking. Initial page auto-cloaks. -->
+    <div id="rootContent" style="display: none;"> <!-- hidden placeholder, used for cloning later -->
+        <div class="als-container" id="alsMainUI">
+            <div class="header">
+                <div class="logo">⚡ ALS // NULLCLOAK</div>
+                <div class="shield-status"><span class="online-dot"></span> ACTIVE | ABSOLUTE BLANKMODE</div>
+                <div class="badge">about:blank • linewize BLOCKER™</div>
+            </div>
+            <div class="main-grid">
+                <div class="ai-chat-section">
+                    <div class="chat-title">
+                        <span>🧠 DEEPSEEK·FREE AI</span>
+                        <span style="font-size: 0.7rem;">(Pollinations • no API key)</span>
+                    </div>
+                    <div class="chat-window" id="chatWindow">
+                        <div class="message ai-msg">✨ I'm ALS AI, fully autonomous. Ask me anything, network shield active. linewize.com & related traces are obliterated.</div>
+                    </div>
+                    <div class="input-area">
+                        <input type="text" id="chatInput" placeholder="Type your message ..." autocomplete="off">
+                        <button id="sendBtn">➤ SEND</button>
+                    </div>
+                </div>
+                <div class="security-console">
+                    <div class="console-header">🛡️ ZERO-TRUST FIREWALL • linewize KILLSWITCH</div>
+                    <div class="log-area" id="securityLog">
+                        <div class="log-entry">[🔄] System ready. ABC cloaking engine armed.</div>
+                        <div class="log-entry">[⚠️] Interceptor active: blocking any request containing 'linewize' (HTTP/XHR/Fetch/WebSocket).</div>
+                        <div class="log-entry">[🧪] Service blocker: DOM observer ready · linewize-#protect blocked.</div>
+                    </div>
+                </div>
+            </div>
+            <footer>ALS | about:blank cloak | Linewize Immunity | AI cloud core</footer>
+        </div>
+    </div>
+
+    <script>
+        // --------------------------------------------------------------
+        // 1) LINE W I Z E  COMPLETE BLOCKER (user agents, requests, connections, overwrite)
+        //    Blocks any string containing "linewize" (case-insensitive) in URL, headers, source.
+        //    Overwrites fetch, XHR, WebSocket, prevents script injection, MutationObserver.
+        // --------------------------------------------------------------
+        (function linewizeEradicator() {
+            const BLOCK_PATTERN = /linewize/i;  // blocks linewize.com / linewize-#protect / linewizeanything
+
+            function blockIfLinewize(resourceUrl, type = 'request') {
+                if (BLOCK_PATTERN.test(resourceUrl)) {
+                    console.warn(`[ALS-BLOCKER] 🚫 Blocked ${type}: ${resourceUrl}`);
+                    addSecurityLog(`🚫 BLOCKED ${type.toUpperCase()}: ${resourceUrl.substring(0, 80)}`, 'block');
+                    return true;
+                }
+                return false;
+            }
+
+            // Add security log to UI (will be available after DOM ready)
+            window.addSecurityLog = function(msg, type = 'info') {
+                const logArea = document.getElementById('securityLog');
+                if (logArea) {
+                    const entry = document.createElement('div');
+                    entry.className = `log-entry ${type === 'block' ? 'block' : (type === 'warn' ? 'warning' : '')}`;
+                    entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                    logArea.appendChild(entry);
+                    entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    console.log("[LOG]:", msg);
+                }
+            };
+
+            // Intercept fetch
+            const originalFetch = window.fetch;
+            window.fetch = function(input, init) {
+                let url = typeof input === 'string' ? input : (input && input.url);
+                if (!url && input && input.toString) url = input.toString();
+                if (url && blockIfLinewize(url, 'fetch')) {
+                    return Promise.reject(new Error("Blocked by ALS: linewize domain request rejected"));
+                }
+                return originalFetch.call(this, input, init);
+            };
+
+            // Intercept XMLHttpRequest
+            const XHR = XMLHttpRequest.prototype;
+            const originalOpen = XHR.open;
+            XHR.open = function(method, url, async, user, password) {
+                if (url && blockIfLinewize(url, 'xhr')) {
+                    this.abort();
+                    throw new Error("linewize request blocked by ALS shield");
+                }
+                return originalOpen.apply(this, arguments);
+            };
+
+            // WebSocket block
+            const OriginalWebSocket = window.WebSocket;
+            window.WebSocket = function(url, protocols) {
+                if (url && blockIfLinewize(url, 'websocket')) {
+                    addSecurityLog(`🔌 WebSocket to ${url} BLOCKED (linewize)`, 'block');
+                    throw new Error("WebSocket blocked: linewize pattern detected");
+                }
+                return new OriginalWebSocket(url, protocols);
+            };
+
+            // Also override navigator.sendBeacon (tracking)
+            if (navigator.sendBeacon) {
+                const originalSendBeacon = navigator.sendBeacon;
+                navigator.sendBeacon = function(url, data) {
+                    if (url && blockIfLinewize(url, 'beacon')) {
+                        addSecurityLog(`📡 Beacon blocked: ${url}`, 'block');
+                        return false;
+                    }
+                    return originalSendBeacon.call(this, url, data);
+                };
+            }
+
+            // Dynamic script / iframe injection prevention (DOM observer + blocking additions)
+            function scanAndBlockNewNode(node) {
+                if (!node) return;
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const src = node.src || node.href || (node.getAttribute && node.getAttribute('src')) || '';
+                    if (BLOCK_PATTERN.test(src)) {
+                        addSecurityLog(`🧨 Removed malicious element (linewize): ${src}`, 'block');
+                        node.remove();
+                        return true;
+                    }
+                    // check inline content/attributes
+                    if (node.innerHTML && BLOCK_PATTERN.test(node.innerHTML)) {
+                        addSecurityLog(`⚠️ scrubbed inline content containing linewize`, 'warn');
+                        node.innerHTML = node.innerHTML.replace(BLOCK_PATTERN, '🛡️[BLOCKED]🛡️');
+                    }
+                    // check id/class patterns
+                    if ((node.id && BLOCK_PATTERN.test(node.id)) || (node.className && BLOCK_PATTERN.test(node.className))) {
+                        addSecurityLog(`⚠️ sanitized element identity containing linewize`, 'warn');
+                        if (node.id && BLOCK_PATTERN.test(node.id)) node.id = 'blocked_identity';
+                        if (node.className && typeof node.className === 'string') node.className = node.className.replace(BLOCK_PATTERN, 'blocked');
+                    }
+                }
+            }
+
+            const observer = new MutationObserver(mutations => {
+                for (let mut of mutations) {
+                    mut.addedNodes.forEach(node => {
+                        if (scanAndBlockNewNode(node)) return;
+                        if (node.querySelectorAll) {
+                            node.querySelectorAll('[src], [href]').forEach(el => {
+                                let urlAttr = el.src || el.href;
+                                if (urlAttr && BLOCK_PATTERN.test(urlAttr)) {
+                                    addSecurityLog(`⛔ dynamic element blocked: ${urlAttr}`, 'block');
+                                    el.remove();
+                                }
+                            });
+                        }
+                    });
+                    if (mut.type === 'attributes') {
+                        let target = mut.target;
+                        let attrValue = target.getAttribute(mut.attributeName);
+                        if (attrValue && BLOCK_PATTERN.test(attrValue)) {
+                            addSecurityLog(`🔒 attribute '${mut.attributeName}' value blocked (linewize)`, 'block');
+                            target.removeAttribute(mut.attributeName);
+                        }
+                    }
+                }
+            });
+            observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'href', 'data-url', 'action'] });
+
+            // intercept script injection from innerHTML / eval / setAttribute bypasses
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName, options) {
+                const element = originalCreateElement.call(document, tagName, options);
+                if (tagName.toLowerCase() === 'script' || tagName.toLowerCase() === 'iframe') {
+                    const setSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src')?.set;
+                    if (setSrc) {
+                        const originalSetter = setSrc;
+                        Object.defineProperty(element, 'src', {
+                            set: function(url) {
+                                if (BLOCK_PATTERN.test(url)) {
+                                    addSecurityLog(`💣 script src blocked: ${url}`, 'block');
+                                    return;
+                                }
+                                originalSetter.call(this, url);
+                            }
+                        });
+                    }
+                }
+                return element;
+            };
+            // additional override for script.src property
+            Object.defineProperty(HTMLScriptElement.prototype, 'src', {
+                configurable: true,
+                enumerable: true,
+                get: function() { return this.getAttribute('src'); },
+                set: function(val) {
+                    if (val && BLOCK_PATTERN.test(val)) {
+                        addSecurityLog(`🛡️ script.src blocked (linewize)`, 'block');
+                        return;
+                    }
+                    this.setAttribute('src', val);
+                }
+            });
+        })();
+
+        // --------------------------------------------------------------
+        // 2) ABC METHOD (complete implementation)
+        //    - supports blank, blob, overwrite types. Multple attempts, auto-open.
+        // --------------------------------------------------------------
+        class ABC {
+            constructor(config = {}) {
+                this.type = config.type || "blank";
+                this.url = config.url || "https://example.com";
+                this.attemptCount = 0;
+                this.maxAttempts = 3;
+                this.opened = false;
+            }
+
+            setType(type) { this.type = type; }
+            setUrl(url) { this.url = url; }
+            getCode() {
+                // returns iframe embed code abstract
+                return `<iframe srcdoc="<!DOCTYPE html><html><body>ABC cloaked</body></html>" style="display:none"></iframe>`;
+            }
+
+            async open() {
+                return new Promise(async (resolve, reject) => {
+                    const tryOpen = async (attempt = 1) => {
+                        this.attemptCount = attempt;
+                        if (attempt > this.maxAttempts) {
+                            addSecurityLog(`[ABC] FATAL: ${this.maxAttempts} attempts failed, fallback active`, 'warn');
+                            this.fallbackToCurrentTab();
+                            resolve(false);
+                            return;
+                        }
+                        addSecurityLog(`[ABC] Cloak attempt #${attempt} | type: ${this.type}`, 'info');
+                        let success = false;
+                        if (this.type === "blank") {
+                            success = this.openBlankMethod();
+                        } else if (this.type === "blob") {
+                            success = this.openBlobMethod();
+                        } else if (this.type === "overwrite") {
+                            success = this.overwriteMethod();
+                        }
+                        if (success) {
+                            addSecurityLog(`[✓] Cloaking SUCCESS: about:blank engaged`, 'info');
+                            this.opened = true;
+                            resolve(true);
+                        } else {
+                            addSecurityLog(`[⚠️] Attempt ${attempt} failed, retrying...`, 'warn');
+                            setTimeout(() => tryOpen(attempt + 1), 400);
+                        }
+                    };
+                    tryOpen(1);
+                });
+            }
+
+            openBlankMethod() {
+                try {
+                    // open about:blank window and inject the ALS full interface
+                    const blankWin = window.open('about:blank', '_blank');
+                    if (!blankWin || blankWin.closed) {
+                        console.warn("popup blocked? attempting alternate");
+                        return false;
+                    }
+                    // Get the full HTML structure from hidden rootContent (or recreate)
+                    const sourceHtml = this.buildFullInterfaceHTML();
+                    blankWin.document.write(sourceHtml);
+                    blankWin.document.close();
+                    // close original opener window after slight delay to avoid flicker
+                    setTimeout(() => {
+                        if (window.opener && !window.opener.closed) { /* no action, but close current */ }
+                        window.close();  // close the initial landing tab
+                    }, 100);
+                    return true;
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            }
+
+            openBlobMethod() {
+                // fallback variant: create blob url and navigate
+                try {
+                    const fullHTML = this.buildFullInterfaceHTML();
+                    const blob = new Blob([fullHTML], { type: 'text/html' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    const newWin = window.open(blobUrl, '_blank');
+                    if (!newWin) return false;
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                    setTimeout(() => window.close(), 200);
+                    return true;
+                } catch(e) { return false; }
+            }
+
+            overwriteMethod() {
+                // directly replace current document content with about:blank-like context but also show UI (history replace)
+                try {
+                    const uiHtml = this.buildFullInterfaceHTML();
+                    document.open();
+                    document.write(uiHtml);
+                    document.close();
+                    history.replaceState(null, "ALS", "about:blank");
+                    document.title = "about:blank";
+                    return true;
+                } catch(e) { return false; }
+            }
+
+            fallbackToCurrentTab() {
+                addSecurityLog(`[FALLBACK] overwriting current page as about:blank UI`, 'warn');
+                const fallbackHtml = this.buildFullInterfaceHTML();
+                document.open();
+                document.write(fallbackHtml);
+                document.close();
+                history.replaceState(null, "about:blank", "about:blank");
+            }
+
+            buildFullInterfaceHTML() {
+                // get fresh html from existing rootContent or rebuild identical UI
+                const originalContent = document.getElementById('rootContent');
+                let mainHtml = '';
+                if (originalContent) {
+                    mainHtml = originalContent.innerHTML;
+                } else {
+                    // failover: template in JS
+                    mainHtml = `<div class="als-container">... ALS core ...</div>`;
+                }
+                // Extract styles and essential scripts to be self-contained in new window
+                const styles = document.querySelector('style').innerHTML;
+                const scriptContent = `
+                    <script>
+                        // reinitialize blocking & ABC on new window fully
+                        (${linewizeEradicator.toString()})();
+                        // reinitialize AI chat after DOM loads
+                        window.initAIChat = function() {
+                            const chatInput = document.getElementById('chatInput');
+                            const sendBtn = document.getElementById('sendBtn');
+                            const chatWindow = document.getElementById('chatWindow');
+                            if(!chatInput) return;
+                            async function askAI(promptMsg) {
+                                const userDiv = document.createElement('div');
+                                userDiv.className = 'message user-msg';
+                                userDiv.innerText = promptMsg;
+                                chatWindow.appendChild(userDiv);
+                                const loaderDiv = document.createElement('div');
+                                loaderDiv.className = 'message ai-msg';
+                                loaderDiv.innerText = '🤖 thinking...';
+                                chatWindow.appendChild(loaderDiv);
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                                try {
+                                    const response = await fetch('https://text.pollinations.ai/prompt/' + encodeURIComponent(promptMsg + " (respond concisely, helpful, friendly)"));
+                                    const text = await response.text();
+                                    loaderDiv.innerText = text.substring(0, 1500);
+                                } catch(e) {
+                                    loaderDiv.innerText = "⚠️ AI temporary overload, but shields remain active. Retry later.";
+                                }
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                            }
+                            sendBtn.onclick = () => {
+                                const msg = chatInput.value.trim();
+                                if(!msg) return;
+                                chatInput.value = '';
+                                askAI(msg);
+                            };
+                            chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendBtn.click(); });
+                        };
+                        window.addEventListener('DOMContentLoaded', () => {
+                            if(window.initAIChat) window.initAIChat();
+                            if(window.addSecurityLog) window.addSecurityLog('[ALS] Cloaked window fully operational | linewize block active', 'info');
+                        });
+                    <\/script>
+                `;
+                return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>about:blank</title><style>${styles}</style></head><body>${mainHtml}${scriptContent}</body></html>`;
+            }
+        }
+
+        // --------------------------------------------------------------
+        // 3) AUTO-CLOAK WITH MULTIPLE ATTEMPTS, NO BUTTON, ABC METHOD
+        // --------------------------------------------------------------
+        (async function autoCloakAndDestroy() {
+            // Instantiate ABC object with blank type (best method)
+            const page = new ABC({
+                type: "blank",
+                url: "https://als.internal/cloak"
+            });
+            page.setType("blank");    // enforce blank method
+            page.setUrl("about:blank");
+            console.log("[ABC] getCode():", page.getCode());
+            
+            // perform auto open + retries (already inside open max 3 attempts)
+            const cloakSuccess = await page.open();
+            if (!cloakSuccess) {
+                // ultimate fallback: overwrite mode
+                addSecurityLog("[FINAL] forcing overwrite cloaking", 'warn');
+                page.type = "overwrite";
+                await page.open();
+            }
+        })();
+
+        // --------------------------------------------------------------
+        // 4) AI CHAT INTEGRATION (free Pollinations GPT-like without API key)
+        //    This runs both in initial (brief) window but also inside cloned about:blank
+        // --------------------------------------------------------------
+        function bindAIChat() {
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatWindow = document.getElementById('chatWindow');
+            if (!chatInput || !sendBtn) return;
+            
+            async function sendToAI(message) {
+                // add user message
+                const userMsgDiv = document.createElement('div');
+                userMsgDiv.className = 'message user-msg';
+                userMsgDiv.innerText = message;
+                chatWindow.appendChild(userMsgDiv);
+                const aiLoader = document.createElement('div');
+                aiLoader.className = 'message ai-msg';
+                aiLoader.innerText = '🌀 generating answer...';
+                chatWindow.appendChild(aiLoader);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                try {
+                    const endpoint = `https://text.pollinations.ai/prompt/${encodeURIComponent(message)}`;
+                    const res = await fetch(endpoint);
+                    const answer = await res.text();
+                    aiLoader.innerText = answer.substring(0, 1800);
+                } catch (err) {
+                    aiLoader.innerText = "⚠️ AI busy | no key needed, but network temporary. ALS shield stays online.";
+                }
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+            
+            sendBtn.onclick = () => {
+                const msg = chatInput.value.trim();
+                if (!msg) return;
+                chatInput.value = '';
+                sendToAI(msg);
+            };
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendBtn.click();
+            });
+        }
+        
+        // Wait for DOM ready to bind chat (only for pre-cloak or if overwrite)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                bindAIChat();
+                if (window.addSecurityLog) addSecurityLog("[AI] Neural cloud online (Pollinations)", 'info');
+            });
+        } else {
+            bindAIChat();
+        }
+        
+        // prevent any residual linewize elements / extra protection
+        window.addEventListener('load', () => {
+            if (window.addSecurityLog) addSecurityLog("🚀 ALS • Full Zero-Day Cloak operational | linewize exterminated", 'info');
+        });
+    </script>
+</body>
+</html>
